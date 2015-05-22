@@ -5,7 +5,13 @@
             {
                 "name": "publishHook",
                 "configuration": {
-                    
+                    "triggers": [
+                        {
+                            "name": "update optionalField to true",
+                            "action": "update",
+                            "query": {"field":"optionalField", "op":"$eq", "rvalue":"true"}
+                        }
+                    ]
                 },
                 "actions": [
                     "insert",

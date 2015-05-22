@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +21,13 @@ import com.redhat.lightblue.config.LightblueFactoryAware;
 import com.redhat.lightblue.crud.InsertionRequest;
 import com.redhat.lightblue.hook.publish.model.Event;
 import com.redhat.lightblue.hook.publish.model.EventIdentity;
+import com.redhat.lightblue.hook.publish.model.Trigger;
 import com.redhat.lightblue.hooks.CRUDHook;
 import com.redhat.lightblue.hooks.HookDoc;
 import com.redhat.lightblue.metadata.EntityMetadata;
 import com.redhat.lightblue.metadata.Field;
 import com.redhat.lightblue.metadata.HookConfiguration;
+import com.redhat.lightblue.query.QueryExpression;
 import com.redhat.lightblue.util.Error;
 import com.redhat.lightblue.util.Path;
 
@@ -55,6 +58,7 @@ public class PublishHook implements CRUDHook, LightblueFactoryAware {
         }
 
         PublishHookConfiguration publishHookConfiguration = (PublishHookConfiguration) hookConfiguration;
+        Map<String, List<Trigger>> operTriggers = publishHookConfiguration.getTriggers();
 
         for (HookDoc doc : docs) {
             Event event = new Event();
@@ -69,6 +73,17 @@ public class PublishHook implements CRUDHook, LightblueFactoryAware {
             event.setLastUpdateDate(new Date());
 
             event.setCRUDOperation(doc.getCRUDOperation().toString());
+            List<Trigger> triggers = operTriggers.get(event.getCRUDOperation());
+
+            //If triggers is null, then assume all operations trigger an event.
+            if (triggers != null) {
+                for (Trigger trigger : triggers) {
+                    QueryExpression query = trigger.getQuery();
+                    //TODO query json document
+                    doc.getPreDoc();
+                    doc.getPostDoc();
+                }
+            }
 
             for (Field f : doc.getEntityMetadata().getEntitySchema().getIdentityFields()) {
                 Path p = f.getFullPath();
